@@ -12,12 +12,12 @@ public class main {
     public static void main(String[] args) throws IOException {
         System.out.println("sss");
 
-        String filename = "testfile.xls";
-        XLS.writeIntoExcel(filename);
+//        String filename = "testfile.xls";
+//        XLS.writeIntoExcel(filename);
+//        OSFileRunner.open(new File(filename));
 
-        OSFileRunner.open(new File(filename));
+        String readFile = "SC9DK270G3-DBLK3448.xls";
+        XLS.ReadFile(readFile);
+
     }
-
-
-
 }

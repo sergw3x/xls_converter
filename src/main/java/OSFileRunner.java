@@ -12,7 +12,7 @@ public class OSFileRunner {
                         {"rundll32", "url.dll,FileProtocolHandler",
                                 file.getAbsolutePath()});
                 return true;
-            } else if (OSDetector.isLinux() || OSDetector.isMac())
+            } else if (OSDetector.isMac())
             {
                 Runtime.getRuntime().exec(new String[]{"/usr/bin/open",
                         file.getAbsolutePath()});

@@ -1,6 +1,10 @@
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,6 +44,40 @@ public class XLS {
         // Записываем всё в файл
         book.write(new FileOutputStream(file));
         book.close();
+    }
+
+    public static void ReadFile(String file) throws IOException {
+        HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(file));
+        HSSFSheet myExcelSheet = myExcelBook.getSheet("D111A");
+
+        int rowTotal = myExcelSheet.getLastRowNum();
+        if ((rowTotal > 0) || (myExcelSheet.getPhysicalNumberOfRows() > 0)) {
+            for (int rowNum = 1; rowNum < rowTotal; rowNum++){
+//                System.out.println(rowTotal);
+                HSSFRow row = myExcelSheet.getRow(rowNum);
+                if (row == null){
+                    continue;
+                }
+                int cellTotal = row.getLastCellNum();
+                for (int cellNum = 1; cellNum < cellTotal; cellNum++){
+
+                    if(row.getCell(cellNum).getCellType() == CellType.STRING){
+                        String val = row.getCell(cellNum).getStringCellValue();
+                        System.out.printf("R%sC%s: %s", rowNum, cellNum, val);
+                    }
+
+                    if(row.getCell(cellNum).getCellType() == CellType.NUMERIC){
+                        Date val = row.getCell(cellNum).getDateCellValue();
+                        System.out.printf("R%sC%s: %s", rowNum, cellNum, val);
+                    }
+                }
+                System.out.print("\n");
+            }
+        }
+
+
+
+        myExcelBook.close();
     }
 
 }
