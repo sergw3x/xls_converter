@@ -9,7 +9,7 @@ public class FileConverter {
 
         String[] commands = {"\"" + FileConverter.im + "\"", fromFile.getAbsolutePath(), toFile.getAbsolutePath()};
 
-        System.out.println(Arrays.toString(commands));
+//        System.out.println(Arrays.toString(commands));
 
         return exec(commands);
 

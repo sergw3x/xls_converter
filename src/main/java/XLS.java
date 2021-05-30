@@ -78,6 +78,7 @@ public class XLS {
         for (Picture p : pics) {
             PictureData pd = p.getPictureData();
             String ext = pd.suggestFileExtension();
+            // todo: https://github.com/kakwa/libemf2svg
             this.saveFile(sheet.getSheetName(), ext, pd.getData());
         }
     }
