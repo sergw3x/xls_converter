@@ -1,72 +1,50 @@
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Calendar;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class XLS {
 
-    @SuppressWarnings("deprecation")
-    public static void writeIntoExcel(String file) throws FileNotFoundException, IOException {
-        Workbook book = new HSSFWorkbook();
-        Sheet sheet = book.createSheet("Birthdays");
+    private String filename;
 
-        // Нумерация начинается с нуля
-        Row row = sheet.createRow(0);
+    public void ReadFile(String file) throws IOException {
+        HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(file));
+        filename = XLS.getFileNameWithoutExtension(file);
+        System.out.println(filename);
 
-        // Мы запишем имя и дату в два столбца
-        // имя будет String, а дата рождения --- Date,
-        // формата dd.mm.yyyy
-        Cell name = row.createCell(0);
-        name.setCellValue("John");
+        for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
+            HSSFSheet sheet = wb.getSheetAt(sheetIndex);
+//            this.readTable(sheet); // "D111A"
 
-        Cell birthdate = row.createCell(1);
+            this.saveImageFromSheet(sheet);
+        }
 
-        DataFormat format = book.createDataFormat();
-        CellStyle dateStyle = book.createCellStyle();
-        dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
-        birthdate.setCellStyle(dateStyle);
-
-
-        // Нумерация лет начинается с 1900-го
-        birthdate.setCellValue(new Date(110, Calendar.OCTOBER, 10));
-
-        // Меняем размер столбца
-        sheet.autoSizeColumn(1);
-
-        // Записываем всё в файл
-        book.write(new FileOutputStream(file));
-        book.close();
+        wb.close();
     }
 
-    public static void ReadFile(String file) throws IOException {
-        HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(file));
-        HSSFSheet myExcelSheet = myExcelBook.getSheet("D111A");
-
-        int rowTotal = myExcelSheet.getLastRowNum();
-        if ((rowTotal > 0) || (myExcelSheet.getPhysicalNumberOfRows() > 0)) {
-            for (int rowNum = 1; rowNum < rowTotal; rowNum++){
-//                System.out.println(rowTotal);
-                HSSFRow row = myExcelSheet.getRow(rowNum);
-                if (row == null){
+    private void readTable(HSSFSheet sheet) throws IOException {
+        int rowTotal = sheet.getLastRowNum();
+        if ((rowTotal > 0) || (sheet.getPhysicalNumberOfRows() > 0)) {
+            for (int rowNum = 1; rowNum < rowTotal; rowNum++) {
+                HSSFRow row = sheet.getRow(rowNum);
+                if (row == null) {
                     continue;
                 }
                 int cellTotal = row.getLastCellNum();
-                for (int cellNum = 1; cellNum < cellTotal; cellNum++){
+                for (int cellNum = 1; cellNum < cellTotal; cellNum++) {
 
-                    if(row.getCell(cellNum).getCellType() == CellType.STRING){
+                    if (row.getCell(cellNum).getCellTypeEnum() == CellType.STRING) {
                         String val = row.getCell(cellNum).getStringCellValue();
                         System.out.printf("R%sC%s: %s", rowNum, cellNum, val);
                     }
 
-                    if(row.getCell(cellNum).getCellType() == CellType.NUMERIC){
+                    if (row.getCell(cellNum).getCellTypeEnum() == CellType.NUMERIC) {
                         Date val = row.getCell(cellNum).getDateCellValue();
                         System.out.printf("R%sC%s: %s", rowNum, cellNum, val);
                     }
@@ -75,9 +53,64 @@ public class XLS {
             }
         }
 
-
-
-        myExcelBook.close();
     }
 
+    private void saveImageFromSheet(Sheet sheet) throws IOException {
+
+        Drawing<?> draw = sheet.createDrawingPatriarch();
+        List<Picture> pics = new ArrayList<>();
+        if (draw instanceof HSSFPatriarch) {
+            HSSFPatriarch hp = (HSSFPatriarch) draw;
+            for (HSSFShape hs : hp.getChildren()) {
+                if (hs instanceof Picture) {
+                    pics.add((Picture) hs);
+                }
+            }
+        } else {
+            XSSFDrawing xdraw = (XSSFDrawing) draw;
+            for (XSSFShape xs : xdraw.getShapes()) {
+                if (xs instanceof Picture) {
+                    pics.add((Picture) xs);
+                }
+            }
+        }
+
+        for (Picture p : pics) {
+            PictureData pd = p.getPictureData();
+            String ext = pd.suggestFileExtension();
+            this.saveFile(sheet.getSheetName(), ext, pd.getData());
+        }
+    }
+
+    //Write the Excel file
+    private void saveFile(String name, String ext, byte[] picData) throws IOException {
+
+        Path tmpDir = Paths.get("data", "tmp");
+        Path tmpFile = Paths.get(tmpDir.toString(), name + "." + ext );
+
+        Path targetDir = Paths.get("data", this.filename, "img");
+        Path targetFile = Paths.get(targetDir.toString(), name + ".png");
+
+        tmpDir.toFile().mkdirs();
+        targetDir.toFile().mkdirs();
+
+        // Сохраним во временную
+        try (FileOutputStream fos = new FileOutputStream(tmpFile.toString())) {
+            fos.write(picData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Конвертируем
+        if (FileConverter.Convert(tmpFile.toFile(), targetFile.toFile()) && !tmpFile.toFile().delete()){
+            System.out.println("err delete tmp file: "+tmpFile);
+        }
+    }
+
+    private static String getFileNameWithoutExtension(String f) {
+        if (f.contains(".")) {
+            return f.replace(f.substring(f.lastIndexOf(".")), "");
+        }
+        return f;
+    }
 }

@@ -1,23 +1,22 @@
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ddf.*;
+import org.apache.poi.hssf.record.EscherAggregate;
+import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 
-import java.awt.*;
 import java.io.*;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class main {
 
     public static void main(String[] args) throws IOException {
-        System.out.println("sss");
-
-//        String filename = "testfile.xls";
-//        XLS.writeIntoExcel(filename);
-//        OSFileRunner.open(new File(filename));
 
         String readFile = "SC9DK270G3-DBLK3448.xls";
-        XLS.ReadFile(readFile);
+
+        XLS x = new XLS();
+        x.ReadFile(readFile);
 
     }
 }
