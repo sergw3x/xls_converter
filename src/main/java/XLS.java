@@ -18,17 +18,20 @@ public class XLS {
         filename = XLS.getFileNameWithoutExtension(file);
         System.out.println(filename);
 
+        HSSFSheet sheet = wb.getSheet("D111A");
+        this.readTable(sheet);
+
         for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
-            HSSFSheet sheet = wb.getSheetAt(sheetIndex);
+//            HSSFSheet sheet = wb.getSheetAt(sheetIndex);
 //            this.readTable(sheet); // "D111A"
 
-            this.saveImageFromSheet(sheet);
+//            this.saveImageFromSheet(sheet);
         }
 
         wb.close();
     }
 
-    private void readTable(HSSFSheet sheet) throws IOException {
+    private void readTable(HSSFSheet sheet) {
         int rowTotal = sheet.getLastRowNum();
         if ((rowTotal > 0) || (sheet.getPhysicalNumberOfRows() > 0)) {
             for (int rowNum = 1; rowNum < rowTotal; rowNum++) {
@@ -90,7 +93,7 @@ public class XLS {
         Path tmpFile = Paths.get(tmpDir.toString(), name + "." + ext );
 
         Path targetDir = Paths.get("data", this.filename, "img");
-        Path targetFile = Paths.get(targetDir.toString(), name + ".png");
+        Path targetFile = Paths.get(targetDir.toString(), name + ".svg");
 
         tmpDir.toFile().mkdirs();
         targetDir.toFile().mkdirs();
