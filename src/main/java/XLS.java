@@ -11,7 +11,7 @@ import java.util.*;
 
 public class XLS {
 
-    private String filename;
+    private final String filename;
 
     public XLS(String file){
         this.filename = file;
@@ -22,13 +22,17 @@ public class XLS {
 
         System.out.println("Reading file: " + this.filename);
 
+        Document Obj = new Document();
+        Obj.Name = "";
+        Obj.Description = "";
+
         for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
             HSSFSheet sheet = wb.getSheetAt(sheetIndex);
             System.out.println("Reading sheet: " + sheet.getSheetName());
             if (sheetIndex == 0) {
-                this.readSheet(sheet, true);
+                this.readSheet(sheet, Obj, true);
             } else {
-                this.readSheet(sheet, false);
+                this.readSheet(sheet, Obj, false);
                 this.saveImageFromSheet(sheet);
             }
         }
@@ -36,16 +40,15 @@ public class XLS {
         wb.close();
     }
 
-    private Catalog readSheet(HSSFSheet sheet, Boolean firstSheet) {
-
-        Catalog Obj = new Catalog();
-        Obj.Name = "";
-        Obj.Description = "";
+    private void readSheet(HSSFSheet sheet, Document Obj, Boolean firstSheet) {
 
         String prevCodeRange = "";
         String prevCode = "";
 
-        Obj.Table = new ArrayList<>();
+        if (Obj.Sheets == null){
+            Obj.Sheets = new ArrayList<>();
+        }
+        ArrayList<Map<String, String>> arrayList = new ArrayList<>();
         Obj.mapColNames = new HashMap<>();
 
         if ((sheet.getLastRowNum() > 0) || (sheet.getPhysicalNumberOfRows() > 0)) {
@@ -162,11 +165,11 @@ public class XLS {
                     }
                 }
                 if (!tabRow.isEmpty()) {
-                    Obj.Table.add(tabRow);
+                    arrayList.add(tabRow);
                 }
             }
         }
-        return Obj;
+        Obj.Sheets.add(arrayList);
 
     }
 
