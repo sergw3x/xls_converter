@@ -15,8 +15,8 @@ public class main {
 
         String readFile = "SC9DK270G3-DBLK3448.xls";
 
-        XLS x = new XLS();
-        x.ReadFile(readFile);
+        XLS x = new XLS(readFile);
+        x.ReadFile();
 
 //        HSSFWorkbook workbook = new HSSFWorkbook(new FileInputStream(readFile));
 //        List lst = workbook.getAllPictures();

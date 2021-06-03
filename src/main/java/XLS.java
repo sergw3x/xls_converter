@@ -13,18 +13,22 @@ public class XLS {
 
     private String filename;
 
-    public void ReadFile(String file) throws IOException {
-        HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(file));
+    public XLS(String file){
+        this.filename = file;
+    }
 
-        System.out.println("Reading file: "+filename);
+    public void ReadFile() throws IOException {
+        HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(this.filename));
+
+        System.out.println("Reading file: " + this.filename);
 
         for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
             HSSFSheet sheet = wb.getSheetAt(sheetIndex);
             System.out.println("Reading sheet: " + sheet.getSheetName());
-            if (sheetIndex == 0){
-                this.readContentSheet(sheet);
-            }else{
-                this.readPageSheet(sheet);
+            if (sheetIndex == 0) {
+                this.readSheet(sheet, true);
+            } else {
+                this.readSheet(sheet, false);
                 this.saveImageFromSheet(sheet);
             }
         }
@@ -32,8 +36,7 @@ public class XLS {
         wb.close();
     }
 
-    private void readContentSheet(HSSFSheet sheet) {
-        int rowTotal = sheet.getLastRowNum();
+    private Catalog readSheet(HSSFSheet sheet, Boolean firstSheet) {
 
         Catalog Obj = new Catalog();
         Obj.Name = "";
@@ -45,107 +48,7 @@ public class XLS {
         Obj.Table = new ArrayList<>();
         Obj.mapColNames = new HashMap<>();
 
-        if ((rowTotal > 0) || (sheet.getPhysicalNumberOfRows() > 0)) {
-            //row loop
-            Iterator<Row> rowIterator = sheet.rowIterator();
-            while (rowIterator.hasNext()) {
-                Row row = rowIterator.next();
-
-                Iterator<Cell> cellIterator = row.cellIterator();
-
-                Map<String, String> tabRow = new HashMap<>();
-
-                outer:
-                while (cellIterator.hasNext()) {
-                    Cell cell = cellIterator.next();
-                    int cellIndex = cell.getColumnIndex();
-                    String cellValue = cell.getStringCellValue();
-
-                    if (Obj.Name.equals("")) {
-                        Obj.Name = cellValue;
-                        continue;
-                    }
-
-                    if (Obj.Description.equals("")) {
-                        Obj.Description = cellValue;
-                        continue;
-                    }
-
-                    String putMapValue = "";
-                    if (cellValue.contains("Group Number")) {
-                        putMapValue = "GroupNumber";
-                    } else if (cellValue.contains("Chinese Description")) {
-                        putMapValue = "ChineseDescription";
-                    } else if (cellValue.contains("English Description")) {
-                        putMapValue = "EnglishDescription";
-                    } else if (cellValue.contains("Code")) {
-                        putMapValue = "Code";
-                    }
-                    if (!putMapValue.equals("")) {
-                        Obj.mapColNames.put(cellIndex, putMapValue);
-                        continue;
-                    }
-
-                    //will iterate over the Merged cells
-                    for (int i = 0; i < sheet.getNumMergedRegions(); i++) {
-                        CellRangeAddress mergedRegion = sheet.getMergedRegion(i);
-
-                        int firstColumn = mergedRegion.getFirstColumn();
-                        int firstRow = mergedRegion.getFirstRow();
-
-                        if (firstRow == cell.getRowIndex() && firstColumn == cell.getColumnIndex()) {
-                            if (prevCodeRange.equals("") || !prevCodeRange.equals(mergedRegion.formatAsString())) {
-                                prevCodeRange = mergedRegion.formatAsString();
-                                prevCode = cellValue;
-                                tabRow.put(Obj.mapColNames.get(firstColumn), cellValue);
-                            }else{
-                                tabRow.put(Obj.mapColNames.get(firstColumn), prevCode);
-                            }
-                            continue outer;
-                        }
-                    }
-
-                    //the data in merge cells is always present on the first cell.
-                    // All other cells(in merged region) are considered blank
-                    if (cell.getCellType() == CellType.BLANK) {
-                        if (!prevCodeRange.equals("") && !Obj.mapColNames.get(cellIndex).equals("")) {
-                            String[] range = prevCodeRange.split(":");
-                            String min = range[0]; // G5
-                            String max = range[1]; // G9
-                            String colNameString = CellReference.convertNumToColString(cellIndex);
-
-                            // G == G && 9 == 9
-                            if (getColNameFromCellName(min).equals(colNameString) &&
-                                    getColNameFromCellName(max).equals(colNameString) &&
-                                    row.getRowNum() < getRowNumFromCellName(max) &&
-                                    getRowNumFromCellName(min) <= row.getRowNum()
-                            ) {
-                                tabRow.put(Obj.mapColNames.get(cellIndex), prevCode);
-                            }
-                        }
-                        continue;
-                    }
-                    tabRow.put(Obj.mapColNames.get(cellIndex), cellValue);
-                }
-                if (!tabRow.isEmpty()) {
-                    Obj.Table.add(tabRow);
-                }
-            }
-        }
-    }
-
-    private void readPageSheet(HSSFSheet sheet) {
-        int rowTotal = sheet.getLastRowNum();
-
-        Catalog Obj = new Catalog();
-
-        String prevCodeRange = "";
-        String prevCode = "";
-
-        Obj.Table = new ArrayList<>();
-        Obj.mapColNames = new HashMap<>();
-
-        if ((rowTotal > 0) || (sheet.getPhysicalNumberOfRows() > 0)) {
+        if ((sheet.getLastRowNum() > 0) || (sheet.getPhysicalNumberOfRows() > 0)) {
             //row loop
             Iterator<Row> rowIterator = sheet.rowIterator();
             while (rowIterator.hasNext()) {
@@ -161,26 +64,50 @@ public class XLS {
                     String cellValue = "";
                     int cellIndex = cell.getColumnIndex();
 
-                    if (cell.getCellType().equals(CellType.NUMERIC)){
+                    if (cell.getCellType().equals(CellType.NUMERIC)) {
                         int num = (int) Math.round(cell.getNumericCellValue());
                         cellValue = Integer.toString(num);
-                    }else{
+                    } else {
                         cellValue = cell.getStringCellValue();
                     }
 
+                    cellValue = cellValue.trim();
+
                     String putMapValue = "";
-                    if (cellValue.contains("Ref")) {
-                        putMapValue = "Ref";
-                    }else if (cellValue.contains("Part No")) {
-                        putMapValue = "PartNo";
-                    } else if (cellValue.contains("Chinese Description")) {
-                        putMapValue = "ChineseDescription";
-                    } else if (cellValue.contains("English Description")) {
-                        putMapValue = "EnglishDescription";
-                    } else if (cellValue.contains("Quantity")) {
-                        putMapValue = "Quantity";
-                    } else if (cellValue.contains("Standard Fasteners Sign")) {
-                        putMapValue = "StandardFastenersSign";
+                    if (firstSheet) {
+                        if (Obj.Name.equals("")) {
+                            Obj.Name = cellValue;
+                            continue;
+                        }
+
+                        if (Obj.Description.equals("")) {
+                            Obj.Description = cellValue;
+                            continue;
+                        }
+
+                        if (cellValue.contains("Group Number")) {
+                            putMapValue = "GroupNumber";
+                        } else if (cellValue.contains("Chinese Description")) {
+                            putMapValue = "ChineseDescription";
+                        } else if (cellValue.contains("English Description")) {
+                            putMapValue = "EnglishDescription";
+                        } else if (cellValue.contains("Code")) {
+                            putMapValue = "Code";
+                        }
+                    } else {
+                        if (cellValue.contains("Ref")) {
+                            putMapValue = "Ref";
+                        } else if (cellValue.contains("Part No")) {
+                            putMapValue = "PartNo";
+                        } else if (cellValue.contains("Chinese Description")) {
+                            putMapValue = "ChineseDescription";
+                        } else if (cellValue.contains("English Description")) {
+                            putMapValue = "EnglishDescription";
+                        } else if (cellValue.contains("Quantity")) {
+                            putMapValue = "Quantity";
+                        } else if (cellValue.contains("Standard Fasteners Sign")) {
+                            putMapValue = "StandardFastenersSign";
+                        }
                     }
                     if (!putMapValue.equals("")) {
                         Obj.mapColNames.put(cellIndex, putMapValue);
@@ -199,10 +126,9 @@ public class XLS {
                                 prevCodeRange = mergedRegion.formatAsString();
                                 prevCode = cellValue;
                                 tabRow.put(Obj.mapColNames.get(firstColumn), cellValue);
-                            }else{
+                            } else {
                                 tabRow.put(Obj.mapColNames.get(firstColumn), prevCode);
                             }
-
                             continue outer;
                         }
                     }
@@ -227,10 +153,12 @@ public class XLS {
                         }
                         continue;
                     }
-                    if (cellValue.contains("Back to") && cell.getHyperlink() != null){
+                    if (cellValue.contains("Back to") && cell.getHyperlink() != null) {
                         continue;
-                    }else{
-                        tabRow.put(Obj.mapColNames.get(cellIndex), cellValue);
+                    }else {
+                        if (Obj.mapColNames.get(cellIndex) != null && !cellValue.equals("")){
+                            tabRow.put(Obj.mapColNames.get(cellIndex), cellValue);
+                        }
                     }
                 }
                 if (!tabRow.isEmpty()) {
@@ -238,6 +166,8 @@ public class XLS {
                 }
             }
         }
+        return Obj;
+
     }
 
     private void saveImageFromSheet(Sheet sheet) throws IOException {
@@ -301,11 +231,5 @@ public class XLS {
     private static int getRowNumFromCellName(String s) {
         return Integer.parseInt(s.replaceAll("[^0-9]", ""));
     }
-    
-    private static String getFileNameWithoutExtension(String f) {
-        if (f.contains(".")) {
-            return f.replace(f.substring(f.lastIndexOf(".")), "");
-        }
-        return f;
-    }
+
 }
