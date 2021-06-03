@@ -15,50 +15,21 @@ public class XLS {
 
     public void ReadFile(String file) throws IOException {
         HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(file));
-        filename = XLS.getFileNameWithoutExtension(file);
-        System.out.println(filename);
 
-        HSSFSheet sheet = wb.getSheet("D111A");
-//        this.readTable(sheet);
-
-//        this.readContentSheet(wb.getSheetAt(0));
-        this.readPageSheet(wb.getSheetAt(2));
+        System.out.println("Reading file: "+filename);
 
         for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
-//            HSSFSheet sheet = wb.getSheetAt(sheetIndex);
-//            this.readTable(sheet); // "D111A"
-
-//            this.saveImageFromSheet(sheet);
-        }
-
-        wb.close();
-    }
-
-    private void readTable(HSSFSheet sheet) {
-        int rowTotal = sheet.getLastRowNum();
-        if ((rowTotal > 0) || (sheet.getPhysicalNumberOfRows() > 0)) {
-            for (int rowNum = 1; rowNum < rowTotal; rowNum++) {
-                HSSFRow row = sheet.getRow(rowNum);
-                if (row == null) {
-                    continue;
-                }
-                int cellTotal = row.getLastCellNum();
-                for (int cellNum = 1; cellNum < cellTotal; cellNum++) {
-
-                    if (row.getCell(cellNum).getCellTypeEnum() == CellType.STRING) {
-                        String val = row.getCell(cellNum).getStringCellValue();
-                        System.out.printf("R%sC%s: %s", rowNum, cellNum, val);
-                    }
-
-                    if (row.getCell(cellNum).getCellTypeEnum() == CellType.NUMERIC) {
-                        Date val = row.getCell(cellNum).getDateCellValue();
-                        System.out.printf("R%sC%s: %s", rowNum, cellNum, val);
-                    }
-                }
-                System.out.print("\n");
+            HSSFSheet sheet = wb.getSheetAt(sheetIndex);
+            System.out.println("Reading sheet: " + sheet.getSheetName());
+            if (sheetIndex == 0){
+                this.readContentSheet(sheet);
+            }else{
+                this.readPageSheet(sheet);
+                this.saveImageFromSheet(sheet);
             }
         }
 
+        wb.close();
     }
 
     private void readContentSheet(HSSFSheet sheet) {
@@ -88,8 +59,7 @@ public class XLS {
                 while (cellIterator.hasNext()) {
                     Cell cell = cellIterator.next();
                     int cellIndex = cell.getColumnIndex();
-                    String cellValue = row.getCell(cell.getColumnIndex()).getStringCellValue();
-                    System.out.printf("R:%s|C:%s | %s\n", row.getRowNum() + 1, cell.getColumnIndex() + 1, cellValue);
+                    String cellValue = cell.getStringCellValue();
 
                     if (Obj.Name.equals("")) {
                         Obj.Name = cellValue;
@@ -131,9 +101,6 @@ public class XLS {
                             }else{
                                 tabRow.put(Obj.mapColNames.get(firstColumn), prevCode);
                             }
-
-                            System.out.printf("  R:%s|C:%s | %s\n", row.getRowNum() + 1, cell.getColumnIndex() + 1,
-                                    sheet.getRow(firstRow).getCell(firstColumn).getStringCellValue());
                             continue outer;
                         }
                     }
@@ -201,9 +168,6 @@ public class XLS {
                         cellValue = cell.getStringCellValue();
                     }
 
-                    System.out.printf("R:%s|C:%s | %s\n", row.getRowNum() + 1, cell.getColumnIndex() + 1, cellValue);
-
-
                     String putMapValue = "";
                     if (cellValue.contains("Ref")) {
                         putMapValue = "Ref";
@@ -239,8 +203,6 @@ public class XLS {
                                 tabRow.put(Obj.mapColNames.get(firstColumn), prevCode);
                             }
 
-                            System.out.printf("  R:%s|C:%s | %s\n", row.getRowNum() + 1, cell.getColumnIndex() + 1,
-                                    sheet.getRow(firstRow).getCell(firstColumn).getStringCellValue());
                             continue outer;
                         }
                     }
