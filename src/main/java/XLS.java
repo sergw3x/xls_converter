@@ -11,16 +11,21 @@ import java.util.*;
 
 public class XLS {
 
-    private final String filename;
+    private final String fileName;
+    private String fileNameWithoutExt = "";
 
     public XLS(String file){
-        this.filename = file;
+        this.fileName = file;
+
+        if (file.contains(".")) {
+            this.fileNameWithoutExt = file.replace(file.substring(file.lastIndexOf(".")), "");
+        }
     }
 
     public void ReadFile() throws IOException {
-        HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(this.filename));
+        HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(this.fileName));
 
-        System.out.println("Reading file: " + this.filename);
+        System.out.println("Reading file: " + this.fileName);
 
         Document Obj = new Document();
         Obj.Name = "";
@@ -207,7 +212,7 @@ public class XLS {
         Path tmpDir = Paths.get("data", "tmp");
         Path tmpFile = Paths.get(tmpDir.toString(), name + "." + ext);
 
-        Path targetDir = Paths.get("data", this.filename, "img");
+        Path targetDir = Paths.get("data", this.fileNameWithoutExt, "img");
         Path targetFile = Paths.get(targetDir.toString(), name + ".svg");
 
         tmpDir.toFile().mkdirs();

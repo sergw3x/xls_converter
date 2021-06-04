@@ -1,13 +1,4 @@
-import org.apache.poi.ddf.*;
-import org.apache.poi.hssf.record.EscherAggregate;
-import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.*;
-
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class main {
 
