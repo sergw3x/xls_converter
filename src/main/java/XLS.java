@@ -11,21 +11,22 @@ import java.util.*;
 
 public class XLS {
 
-    private final String fileName;
+    private final File file;
     private String fileNameWithoutExt = "";
 
-    public XLS(String file){
-        this.fileName = file;
+    public XLS(File file){
+        this.file = file;
 
-        if (file.contains(".")) {
-            this.fileNameWithoutExt = file.replace(file.substring(file.lastIndexOf(".")), "");
+        String fileName = file.getName();
+        if (fileName.contains(".")) {
+            this.fileNameWithoutExt = fileName.replace(fileName.substring(fileName.lastIndexOf(".")), "");
         }
     }
 
     public void ReadFile() throws IOException {
-        HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(this.fileName));
+        HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(this.file));
 
-        System.out.println("Reading file: " + this.fileName);
+        System.out.println("Reading file: " + this.file.getName());
 
         Document Obj = new Document();
         Obj.Name = "";
